@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F8FAF8">
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="120dp" 
+        android:background="@drawable/header_background_curved"
+        android:paddingTop="24dp" 
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/toolbar_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Your Order QR Code"
+            android:textColor="#FFFFFF"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:layout_gravity="center" />
+
+    </androidx.appcompat.widget.Toolbar>
+
+    <ImageView
+        android:id="@+id/ivQrCode"
+        android:layout_width="300dp"
+        android:layout_height="300dp"
+        android:scaleType="fitCenter"
+        app:layout_constraintTop_toBottomOf="@+id/toolbar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"/>
+
+    <TextView
+        android:id="@+id/tvOrderId"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Order ID: ..."
+        android:layout_marginTop="16dp"
+        app:layout_constraintTop_toBottomOf="@id/ivQrCode"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <!-- Success Overlay -->
+    <ImageView
+        android:id="@+id/ivSuccessOverlay"
+        android:layout_width="150dp"
+        android:layout_height="150dp"
+        android:src="@android:drawable/checkbox_on_background"
+        android:visibility="gone"
+        android:background="#99000000"
+        app:tint="@android:color/white"
+        app:layout_constraintTop_toTopOf="@id/ivQrCode"
+        app:layout_constraintBottom_toBottomOf="@id/ivQrCode"
+        app:layout_constraintStart_toStartOf="@id/ivQrCode"
+        app:layout_constraintEnd_toEndOf="@id/ivQrCode"
+        tools:visibility="visible"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

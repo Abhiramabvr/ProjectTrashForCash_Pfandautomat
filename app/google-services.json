@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "419876464236",
+    "firebase_url": "https://projecjtcm-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "projecjtcm",
+    "storage_bucket": "projecjtcm.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:419876464236:android:4b7f1d87a2f1a6d7a09a49",
+        "android_client_info": {
+          "package_name": "com.bvr.projectjtcm"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDPeW3b38E5zkeOwhEGg0arpV4MxzIJRGU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
