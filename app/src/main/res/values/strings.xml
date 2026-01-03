@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name">ProjectJTCM</string>
+    <string name="google_api_key" translatable="false">AIzaSyDPeW3b38E5zkeOwhEGgOarpV4MxzIJRGU</string>
+    <string name="project_id" translatable="false">projecjtcm</string>
+    <string name="firebase_database_url" translatable="false">https://projecjtcm-default-rtdb.asia-southeast1.firebasedatabase.app</string>
+
+    <string name="google_app_id" translatable="false">1:419876464236:android:4b7f1d87a2f1a6d7a09a49</string>
+
+    <string name="default_web_client_id" translatable="false">1:419876464236:android:4b7f1d87a2f1a6d7a09a49</string>
 </resources>

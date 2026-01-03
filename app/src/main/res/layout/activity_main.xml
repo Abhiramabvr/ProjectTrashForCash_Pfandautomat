@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#F8FAF8"
-    tools:context=".MainActivity">
+    tools:context=".ui.user.MainActivity">
 
     <!-- Top Header Background (Curved shape simulation) -->
     <View

@@ -1,4 +1,4 @@
-package com.bvr.projectjtcm
+package com.bvr.projectjtcm.ui.user
 
 import android.os.Bundle
 import android.view.View
@@ -48,13 +48,14 @@ class QrDisplayActivity : AppCompatActivity() {
 
     private fun listenForStatusChanges(orderId: String) {
         val database = FirebaseDatabase.getInstance().getReference("waste_history").child(orderId)
-        statusListener = database.child("status").addValueEventListener(object : ValueEventListener {
+        statusListener = database.child("status").addValueEventListener(object :
+            ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val status = snapshot.getValue(String::class.java)
                 if (status == "Completed") {
                     binding.ivSuccessOverlay.visibility = View.VISIBLE
                     // Optional: auto-close after a few seconds
-                    binding.root.postDelayed({ finish() }, 3000) 
+                    binding.root.postDelayed({ finish() }, 3000)
                 }
             }
 

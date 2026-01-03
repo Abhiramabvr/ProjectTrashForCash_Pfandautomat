@@ -1,4 +1,4 @@
-package com.bvr.projectjtcm
+package com.bvr.projectjtcm.data
 
 data class WasteData(
     val id: String? = null,

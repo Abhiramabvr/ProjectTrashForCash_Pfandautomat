@@ -1,27 +1,30 @@
-package com.bvr.projectjtcm
+package com.bvr.projectjtcm.ui.user
 
-import android.content.Intent
 import android.os.Bundle
-import android.widget.ImageView
+import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AppCompatActivity
+// Hapus import AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.bvr.projectjtcm.R
+import com.bvr.projectjtcm.data.WastePrice
 import com.bvr.projectjtcm.databinding.ActivityPriceListBinding
+import com.bvr.projectjtcm.ui.adapter.PriceAdapter
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 
-class PriceListActivity : AppCompatActivity() {
+// PERUBAHAN 1: Mewarisi BaseActivity
+class PriceListActivity : BaseActivity() {
 
     private lateinit var binding: ActivityPriceListBinding
     private lateinit var adapter: PriceAdapter
     private val priceList = ArrayList<WastePrice>()
-    
-    private val database by lazy { 
+
+    private val database by lazy {
         try {
             FirebaseDatabase.getInstance().getReference("waste_prices")
         } catch (e: Exception) {
@@ -32,14 +35,14 @@ class PriceListActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        
+
         binding = ActivityPriceListBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            
-            val titleParams = binding.tvTitle.layoutParams as android.view.ViewGroup.MarginLayoutParams
+
+            val titleParams = binding.tvTitle.layoutParams as ViewGroup.MarginLayoutParams
             titleParams.topMargin = systemBars.top + (40 * resources.displayMetrics.density).toInt()
             binding.tvTitle.layoutParams = titleParams
 
@@ -49,9 +52,10 @@ class PriceListActivity : AppCompatActivity() {
 
         setupRecyclerView()
         fetchPricesFromFirebase()
-        
-        // PERBAIKAN: Set menu aktif ke navOrder (Ikon ke-3)
-        setupDynamicBottomNavigation(R.id.navOrder) 
+
+        // PERUBAHAN 2: Panggil fungsi navigasi otomatis
+        // Gunakan R.id.navOrder agar ikon ke-3 menyala
+        setupBottomNavigation(R.id.navOrder)
     }
 
     private fun setupRecyclerView() {
@@ -89,7 +93,7 @@ class PriceListActivity : AppCompatActivity() {
             }
         })
     }
-    
+
     private fun addDefaultDataToFirebase() {
         val defaultPrices = listOf(
             WastePrice("Plastic", 2500.0),
@@ -99,7 +103,7 @@ class PriceListActivity : AppCompatActivity() {
             WastePrice("Paper", 1500.0),
             WastePrice("Other", 1250.0)
         )
-        
+
         defaultPrices.forEach { price ->
             database?.child(price.category)?.setValue(price)
         }
@@ -116,43 +120,5 @@ class PriceListActivity : AppCompatActivity() {
         adapter.notifyDataSetChanged()
     }
 
-    private fun setupDynamicBottomNavigation(activeId: Int) {
-        val navHome = findViewById<ImageView>(R.id.navHome)
-        val navHistory = findViewById<ImageView>(R.id.navHistory)
-        val navOrder = findViewById<ImageView>(R.id.navOrder)
-        val navProfile = findViewById<ImageView>(R.id.navProfile)
-
-        val icons = listOf(navHome, navHistory, navOrder, navProfile)
-        icons.forEach { it.alpha = 0.5f }
-
-        findViewById<ImageView>(activeId)?.alpha = 1.0f
-
-        navHome.setOnClickListener {
-            if (activeId != R.id.navHome) {
-                startActivity(Intent(this, MainActivity::class.java))
-                overridePendingTransition(0, 0)
-                finishAffinity()
-            }
-        }
-
-        navHistory.setOnClickListener {
-            if (activeId != R.id.navHistory) {
-                startActivity(Intent(this, HistoryActivity::class.java))
-                overridePendingTransition(0, 0)
-                finish()
-            }
-        }
-
-        navOrder.setOnClickListener {
-             // Sudah di sini
-        }
-
-        navProfile.setOnClickListener {
-             if (activeId != R.id.navProfile) {
-                startActivity(Intent(this, ProfileActivity::class.java))
-                overridePendingTransition(0, 0)
-                finish()
-            }
-        }
-    }
+    // PERUBAHAN 3: Fungsi setupDynamicBottomNavigation() SUDAH DIHAPUS.
 }

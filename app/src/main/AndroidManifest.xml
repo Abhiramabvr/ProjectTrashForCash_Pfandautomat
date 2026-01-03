@@ -17,9 +17,8 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.ProjectJTCM">
 
-        <!-- Activity Launcher Baru -->
         <activity
-            android:name=".RoleSelectionActivity"
+            android:name=".ui.onboarding.RoleSelectionActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -27,18 +26,23 @@
             </intent-filter>
         </activity>
 
-        <!-- User Activities -->
-        <activity android:name=".MainActivity" android:exported="false" />
-        <activity android:name=".OrderPickupActivity" android:exported="false" />
-        <activity android:name=".HistoryActivity" android:exported="false" />
-        <activity android:name=".PriceListActivity" android:exported="false" />
-        <activity android:name=".ProfileActivity" android:exported="false" />
-        <activity android:name=".QrDisplayActivity" android:exported="false" />
+        <activity
+            android:name=".ui.auth.LoginActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.auth.RegisterActivity"
+            android:exported="false" />
 
-        <!-- Collector Activities -->
-        <activity android:name=".CollectorMainActivity" android:exported="false" />
-        <activity android:name=".CollectorPriceListActivity" android:exported="false" />
-        
+        <activity android:name=".ui.user.MainActivity" android:exported="false" />
+        <activity android:name=".ui.user.OrderPickupActivity" android:exported="false" />
+        <activity android:name=".ui.user.HistoryActivity" android:exported="false" />
+        <activity android:name=".ui.user.PriceListActivity" android:exported="false" />
+        <activity android:name=".ui.user.ProfileActivity" android:exported="false" />
+        <activity android:name=".ui.user.QrDisplayActivity" android:exported="false" />
+
+        <activity android:name=".ui.collector.CollectorMainActivity" android:exported="false" />
+        <activity android:name=".ui.collector.CollectorPriceListActivity" android:exported="false" />
+
     </application>
 
 </manifest>

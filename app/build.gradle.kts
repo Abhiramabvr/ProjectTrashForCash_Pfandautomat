@@ -53,7 +53,7 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
     implementation("com.google.firebase:firebase-database-ktx")
     implementation("com.google.firebase:firebase-analytics-ktx")
-
+    implementation("com.google.firebase:firebase-auth-ktx")
     // QR Code Generator
     implementation("com.journeyapps:zxing-android-embedded:4.3.0")
 

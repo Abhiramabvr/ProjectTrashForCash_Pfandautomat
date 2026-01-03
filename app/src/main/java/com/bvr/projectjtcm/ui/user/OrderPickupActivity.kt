@@ -1,14 +1,17 @@
-package com.bvr.projectjtcm
+package com.bvr.projectjtcm.ui.user
 
+import android.app.DatePickerDialog
+import android.app.TimePickerDialog
 import android.content.Intent
 import android.os.Bundle
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import com.bvr.projectjtcm.ui.user.QrDisplayActivity
+import com.bvr.projectjtcm.data.WasteData
 import com.bvr.projectjtcm.databinding.ActivityOrderPickupBinding
 import com.google.firebase.database.FirebaseDatabase
 import org.maplibre.android.MapLibre
@@ -17,25 +20,21 @@ import org.maplibre.android.camera.CameraPosition
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.OnMapReadyCallback
-import org.maplibre.android.maps.Style
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
-import android.app.DatePickerDialog
-import android.app.TimePickerDialog
-import java.util.Calendar
-import android.widget.EditText
 
 class OrderPickupActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var binding: ActivityOrderPickupBinding
     private lateinit var mapLibreMap: MapLibreMap
-    
+
     private var wasteType = ""
     private var wasteWeight = 0
     private var wasteIncome = 0.0
     private var existingId: String? = null
-    
+
     private var selectedLocation = "Belum dipilih"
     private var selectedPickupDate = ""
     private var selectedPickupTime = ""
@@ -51,9 +50,9 @@ class OrderPickupActivity : AppCompatActivity(), OnMapReadyCallback {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
+
         enableEdgeToEdge()
-        
+
         try {
             MapLibre.getInstance(this)
         } catch (e: Exception) {
@@ -62,10 +61,10 @@ class OrderPickupActivity : AppCompatActivity(), OnMapReadyCallback {
 
         binding = ActivityOrderPickupBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        
+
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            
+
             val titleParams = binding.tvTitle.layoutParams as ViewGroup.MarginLayoutParams
             titleParams.topMargin = systemBars.top + (20 * resources.displayMetrics.density).toInt()
             binding.tvTitle.layoutParams = titleParams
@@ -88,11 +87,11 @@ class OrderPickupActivity : AppCompatActivity(), OnMapReadyCallback {
 
         setupClickListeners()
     }
-    
+
     private fun setupClickListeners() {
         binding.btnCancel.setOnClickListener { finish() }
-        
-        binding.btnOrder.setOnClickListener { 
+
+        binding.btnOrder.setOnClickListener {
             if (selectedLocation == "Belum dipilih") {
                 Toast.makeText(this, "⚠️ Pilih lokasi bank sampah dulu!", Toast.LENGTH_SHORT).show()
             } else if (selectedPickupDate.isEmpty() || selectedPickupTime.isEmpty()) {
@@ -129,17 +128,28 @@ class OrderPickupActivity : AppCompatActivity(), OnMapReadyCallback {
             }, hour, minute, true).show()
         }
     }
-    
+
     private fun saveToFirebase(status: String) {
          try {
             val database = FirebaseDatabase.getInstance().getReference("waste_history")
-            
+
             val id = existingId ?: database.push().key
             val date = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date())
             val month = SimpleDateFormat("MMMM", Locale.getDefault()).format(Date())
-            
-            val wasteData = WasteData(id, wasteType, wasteWeight, wasteIncome, status, date, month, selectedLocation, selectedPickupDate, selectedPickupTime)
-            
+
+            val wasteData = WasteData(
+                id,
+                wasteType,
+                wasteWeight,
+                wasteIncome,
+                status,
+                date,
+                month,
+                selectedLocation,
+                selectedPickupDate,
+                selectedPickupTime
+            )
+
             if (id != null) {
                 database.child(id).setValue(wasteData).addOnCompleteListener { task ->
                     if (task.isSuccessful) {
@@ -169,9 +179,9 @@ class OrderPickupActivity : AppCompatActivity(), OnMapReadyCallback {
                 .target(yogyakarta)
                 .zoom(12.0) // Zoom yang sesuai untuk melihat beberapa lokasi
                 .build()
-                
+
             addWasteBankMarkers()
-            
+
             map.setOnMarkerClickListener { marker ->
                 selectedLocation = marker.title ?: "Lokasi Tidak Diketahui"
                 binding.tvAddressValue.text = selectedLocation
@@ -180,7 +190,7 @@ class OrderPickupActivity : AppCompatActivity(), OnMapReadyCallback {
             }
         }
     }
-    
+
     private fun addWasteBankMarkers() {
         for ((name, latLng) in wasteBanks) {
             mapLibreMap.addMarker(MarkerOptions().position(latLng).title(name).snippet("Klik untuk memilih"))

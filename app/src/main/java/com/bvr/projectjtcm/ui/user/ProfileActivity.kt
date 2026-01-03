@@ -1,27 +1,26 @@
-package com.bvr.projectjtcm
+package com.bvr.projectjtcm.ui.user
 
-import android.content.Context
-import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.EditText
-import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
+// Hapus import AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import com.bvr.projectjtcm.R
 import com.bvr.projectjtcm.databinding.ActivityProfileBinding
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 
-class ProfileActivity : AppCompatActivity() {
+// PERUBAHAN 1: Mewarisi BaseActivity
+class ProfileActivity : BaseActivity() {
 
     private lateinit var binding: ActivityProfileBinding
 
@@ -51,18 +50,20 @@ class ProfileActivity : AppCompatActivity() {
         loadUserData()
         fetchRecycledStats()
         setupClickListeners()
-        setupDynamicBottomNavigation(R.id.navProfile) // Menu 4: Profile
+
+        // PERUBAHAN 2: Panggil Navigasi Otomatis (Set aktif di menu Profile)
+        setupBottomNavigation(R.id.navProfile)
     }
 
     private fun loadUserData() {
-        val sharedPref = getSharedPreferences("UserProfile", Context.MODE_PRIVATE)
-        
+        val sharedPref = getSharedPreferences("UserProfile", MODE_PRIVATE)
+
         binding.tvName.text = sharedPref.getString("NAME", "Abhirama")
         binding.tvRole.text = sharedPref.getString("ROLE", "Developer")
-        binding.tvEmailValue.text = sharedPref.getString("EMAIL", "abhirama@gmail.com") 
-        binding.tvPhoneValue.text = sharedPref.getString("PHONE", "") 
-        binding.tvInstagramValue.text = sharedPref.getString("INSTAGRAM", "") 
-        
+        binding.tvEmailValue.text = sharedPref.getString("EMAIL", "abhirama@gmail.com")
+        binding.tvPhoneValue.text = sharedPref.getString("PHONE", "")
+        binding.tvInstagramValue.text = sharedPref.getString("INSTAGRAM", "")
+
         val imageUriString = sharedPref.getString("PROFILE_IMAGE_URI", null)
         if (imageUriString != null) {
             binding.ivProfileImage.setImageURI(Uri.parse(imageUriString))
@@ -88,12 +89,12 @@ class ProfileActivity : AppCompatActivity() {
     }
 
     private fun saveUserData(key: String, value: String) {
-        val sharedPref = getSharedPreferences("UserProfile", Context.MODE_PRIVATE)
+        val sharedPref = getSharedPreferences("UserProfile", MODE_PRIVATE)
         with(sharedPref.edit()) {
             putString(key, value)
             apply()
         }
-        loadUserData() 
+        loadUserData()
         Toast.makeText(this, "Profile updated!", Toast.LENGTH_SHORT).show()
     }
 
@@ -127,9 +128,9 @@ class ProfileActivity : AppCompatActivity() {
         binding.tvName.setOnClickListener {
             showEditDialog("Name", "NAME", binding.tvName.text.toString())
         }
-        
+
         binding.tvRole.setOnClickListener {
-             showEditDialog("Role/Job", "ROLE", binding.tvRole.text.toString())
+            showEditDialog("Role/Job", "ROLE", binding.tvRole.text.toString())
         }
 
         binding.itemEmail.setOnClickListener {
@@ -145,43 +146,5 @@ class ProfileActivity : AppCompatActivity() {
         }
     }
 
-    private fun setupDynamicBottomNavigation(activeId: Int) {
-        val navHome = binding.bottomNavContainer.findViewById<ImageView>(R.id.navHome)
-        val navHistory = binding.bottomNavContainer.findViewById<ImageView>(R.id.navHistory)
-        val navOrder = binding.bottomNavContainer.findViewById<ImageView>(R.id.navOrder)
-        val navProfile = binding.bottomNavContainer.findViewById<ImageView>(R.id.navProfile)
-
-        val icons = listOf(navHome, navHistory, navOrder, navProfile)
-        icons.forEach { it.alpha = 0.5f }
-
-        binding.bottomNavContainer.findViewById<ImageView>(activeId)?.alpha = 1.0f
-
-        navHome.setOnClickListener {
-             if (activeId != R.id.navHome) {
-                startActivity(Intent(this, MainActivity::class.java))
-                overridePendingTransition(0, 0)
-                finishAffinity()
-            }
-        }
-
-        navHistory.setOnClickListener {
-             if (activeId != R.id.navHistory) {
-                startActivity(Intent(this, HistoryActivity::class.java))
-                overridePendingTransition(0, 0)
-                finish()
-            }
-        }
-
-        navOrder.setOnClickListener {
-             if (activeId != R.id.navOrder) {
-                startActivity(Intent(this, PriceListActivity::class.java))
-                overridePendingTransition(0, 0)
-                finish()
-            }
-        }
-
-        navProfile.setOnClickListener {
-            // Already here
-        }
-    }
+    // PERUBAHAN 3: Fungsi setupDynamicBottomNavigation() SUDAH DIHAPUS.
 }

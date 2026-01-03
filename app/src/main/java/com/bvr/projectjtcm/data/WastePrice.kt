@@ -1,4 +1,4 @@
-package com.bvr.projectjtcm
+package com.bvr.projectjtcm.data
 
 data class WastePrice(
     val category: String = "",

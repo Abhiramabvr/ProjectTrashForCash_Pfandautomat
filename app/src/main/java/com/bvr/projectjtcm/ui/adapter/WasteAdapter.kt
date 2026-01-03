@@ -1,9 +1,11 @@
-package com.bvr.projectjtcm
+package com.bvr.projectjtcm.ui.adapter
 
+import android.R
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import com.bvr.projectjtcm.data.WasteData
 import com.bvr.projectjtcm.databinding.ItemWasteHistoryBinding
 import java.text.NumberFormat
 import java.util.Locale
@@ -55,12 +57,12 @@ class WasteAdapter(private val wasteList: ArrayList<WasteData>) : RecyclerView.A
             holder.binding.tvLocation.text = "📍 ${currentItem.location}"
             holder.binding.tvScheduleTime.text = "🗓️ ${currentItem.pickupDate}, ${currentItem.pickupTime}"
             holder.binding.root.alpha = 1.0f // Tampil terang
-            holder.binding.ivStatusIcon.setImageResource(android.R.drawable.ic_menu_send) // Ikon check/terkirim
+            holder.binding.ivStatusIcon.setImageResource(R.drawable.ic_menu_send) // Ikon check/terkirim
         } else {
             // Jika hanya "Saved Item"
             holder.binding.layoutScheduleDetails.visibility = View.GONE
             holder.binding.root.alpha = 1.0f // Tetap terang agar bisa diklik
-            holder.binding.ivStatusIcon.setImageResource(android.R.drawable.ic_menu_save) // Ikon simpan
+            holder.binding.ivStatusIcon.setImageResource(R.drawable.ic_menu_save) // Ikon simpan
         }
     }
 

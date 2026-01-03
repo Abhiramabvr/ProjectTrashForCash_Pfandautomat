@@ -1,8 +1,9 @@
-package com.bvr.projectjtcm
+package com.bvr.projectjtcm.ui.adapter
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import com.bvr.projectjtcm.data.WastePrice
 import com.bvr.projectjtcm.databinding.ItemWastePriceBinding
 import java.text.NumberFormat
 import java.util.Locale
@@ -37,9 +38,9 @@ class PriceAdapter(private val priceList: ArrayList<WastePrice>) : RecyclerView.
 
     override fun onBindViewHolder(holder: PriceViewHolder, position: Int) {
         val currentItem = priceList[position]
-        
+
         holder.binding.tvCategory.text = currentItem.category
-        
+
         val format = NumberFormat.getCurrencyInstance(Locale("id", "ID"))
         format.maximumFractionDigits = 0
         holder.binding.tvPrice.text = "+ ${format.format(currentItem.pricePerKg)}"

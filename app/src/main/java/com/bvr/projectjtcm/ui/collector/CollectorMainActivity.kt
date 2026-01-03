@@ -1,10 +1,10 @@
-package com.bvr.projectjtcm
+package com.bvr.projectjtcm.ui.collector
 
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.media.ToneGenerator
 import android.media.AudioManager
+import android.media.ToneGenerator
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.View
@@ -13,8 +13,10 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.bvr.projectjtcm.R
 import com.bvr.projectjtcm.databinding.ActivityCollectorMainBinding
 import com.google.firebase.database.FirebaseDatabase
+import com.google.zxing.ResultPoint
 import com.journeyapps.barcodescanner.BarcodeCallback
 import com.journeyapps.barcodescanner.BarcodeResult
 import com.journeyapps.barcodescanner.DecoratedBarcodeView
@@ -25,7 +27,7 @@ class CollectorMainActivity : AppCompatActivity() {
     private lateinit var barcodeView: DecoratedBarcodeView
     private lateinit var toneGenerator: ToneGenerator
     private val CAMERA_PERMISSION_REQUEST_CODE = 101
-    
+
     private val callback = object : BarcodeCallback {
         override fun barcodeResult(result: BarcodeResult?) {
             result?.let {
@@ -36,8 +38,8 @@ class CollectorMainActivity : AppCompatActivity() {
                 }
             }
         }
-        
-        override fun possibleResultPoints(resultPoints: List<com.google.zxing.ResultPoint>) {}
+
+        override fun possibleResultPoints(resultPoints: List<ResultPoint>) {}
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -48,7 +50,7 @@ class CollectorMainActivity : AppCompatActivity() {
         barcodeView = binding.barcodeScanner
         // Inisialisasi ToneGenerator
         toneGenerator = ToneGenerator(AudioManager.STREAM_MUSIC, 100)
-        
+
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), CAMERA_PERMISSION_REQUEST_CODE)
         } else {
@@ -77,7 +79,7 @@ class CollectorMainActivity : AppCompatActivity() {
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         return barcodeView.onKeyDown(keyCode, event) || super.onKeyDown(keyCode, event)
     }
-    
+
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == CAMERA_PERMISSION_REQUEST_CODE) {
@@ -96,7 +98,7 @@ class CollectorMainActivity : AppCompatActivity() {
             .addOnSuccessListener {
                 // Mainkan suara BEEP
                 toneGenerator.startTone(ToneGenerator.TONE_CDMA_PIP, 150)
-                
+
                 showSuccessOverlay()
                 Toast.makeText(this, "✅ Order #$orderId Selesai!", Toast.LENGTH_SHORT).show()
                 barcodeView.postDelayed({

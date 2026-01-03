@@ -1,6 +1,5 @@
-package com.bvr.projectjtcm
+package com.bvr.projectjtcm.ui.collector
 
-import android.content.Intent
 import android.os.Bundle
 import android.text.InputType
 import android.widget.EditText
@@ -9,7 +8,10 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.bvr.projectjtcm.R
+import com.bvr.projectjtcm.data.WastePrice
 import com.bvr.projectjtcm.databinding.ActivityPriceListBinding
+import com.bvr.projectjtcm.ui.adapter.PriceAdapter
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
@@ -20,8 +22,8 @@ class EditPriceActivity : AppCompatActivity() {
     private lateinit var binding: ActivityPriceListBinding
     private lateinit var adapter: PriceAdapter
     private val priceList = ArrayList<WastePrice>()
-    
-    private val database by lazy { 
+
+    private val database by lazy {
         try {
             FirebaseDatabase.getInstance().getReference("waste_prices")
         } catch (e: Exception) {
@@ -84,7 +86,7 @@ class EditPriceActivity : AppCompatActivity() {
                 Toast.makeText(this, "Gagal mengupdate harga", Toast.LENGTH_SHORT).show()
             }
     }
-    
+
     private fun fetchPricesFromFirebase() {
         if (database == null) return
 
@@ -98,7 +100,7 @@ class EditPriceActivity : AppCompatActivity() {
                             priceList.add(price)
                         }
                     }
-                } 
+                }
                 adapter.notifyDataSetChanged()
             }
 
@@ -107,7 +109,7 @@ class EditPriceActivity : AppCompatActivity() {
             }
         })
     }
-    
+
     private fun setupBottomNavigation() {
         // Kita gunakan binding di sini karena layoutnya sama dengan PriceListActivity
         val navScan = binding.bottomNavContainer.findViewById<ImageView>(R.id.navHome) // Di layout ini, navHome adalah ikon pertama
