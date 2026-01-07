@@ -15,7 +15,10 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.bvr.projectjtcm.R
 import com.bvr.projectjtcm.databinding.ActivityCollectorMainBinding
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import com.google.zxing.ResultPoint
 import com.journeyapps.barcodescanner.BarcodeCallback
 import com.journeyapps.barcodescanner.BarcodeResult
@@ -33,8 +36,9 @@ class CollectorMainActivity : AppCompatActivity() {
             result?.let {
                 val orderId = it.text
                 if (orderId.isNotEmpty()) {
+                    // Pause scanner agar tidak scan berulang-ulang saat proses loading
                     barcodeView.pause()
-                    updateOrderStatus(orderId)
+                    findAndUpdateOrder(orderId)
                 }
             }
         }
@@ -48,7 +52,6 @@ class CollectorMainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         barcodeView = binding.barcodeScanner
-        // Inisialisasi ToneGenerator
         toneGenerator = ToneGenerator(AudioManager.STREAM_MUSIC, 100)
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
@@ -72,7 +75,6 @@ class CollectorMainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        // Lepaskan resource saat activity dihancurkan
         toneGenerator.release()
     }
 
@@ -92,25 +94,66 @@ class CollectorMainActivity : AppCompatActivity() {
         }
     }
 
-    private fun updateOrderStatus(orderId: String) {
-        val database = FirebaseDatabase.getInstance().getReference("waste_history").child(orderId)
-        database.child("status").setValue("Completed")
-            .addOnSuccessListener {
-                // Mainkan suara BEEP
-                toneGenerator.startTone(ToneGenerator.TONE_CDMA_PIP, 150)
+    // --- LOGIC BARU: MENCARI ORDER DI DALAM FOLDER USER ---
+    private fun findAndUpdateOrder(orderId: String) {
+        val rootRef = FirebaseDatabase.getInstance().getReference("waste_history")
 
-                showSuccessOverlay()
-                Toast.makeText(this, "✅ Order #$orderId Selesai!", Toast.LENGTH_SHORT).show()
-                barcodeView.postDelayed({
-                    barcodeView.resume()
-                    barcodeView.decodeContinuous(callback)
-                }, 2000)
+        // Kita ambil "Snapshot" dari seluruh folder waste_history
+        rootRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                var isFound = false
+
+                // Loop: Cek satu per satu folder milik User (Uid)
+                for (userSnapshot in snapshot.children) {
+                    // Cek apakah User ini punya anak bernama 'orderId'
+                    if (userSnapshot.hasChild(orderId)) {
+
+                        // KETEMU! Order ada di user ini.
+                        // Sekarang kita update statusnya jadi "Completed"
+                        userSnapshot.child(orderId).child("status").ref.setValue("Completed")
+                            .addOnSuccessListener {
+                                onSuccessUpdate(orderId)
+                            }
+                            .addOnFailureListener {
+                                Toast.makeText(this@CollectorMainActivity, "Gagal update: ${it.message}", Toast.LENGTH_SHORT).show()
+                                resumeScanner()
+                            }
+
+                        isFound = true
+                        break // Berhenti mencari karena sudah ketemu
+                    }
+                }
+
+                if (!isFound) {
+                    Toast.makeText(this@CollectorMainActivity, "❌ Order ID tidak ditemukan!", Toast.LENGTH_SHORT).show()
+                    resumeScanner()
+                }
             }
-            .addOnFailureListener {
-                Toast.makeText(this, "❌ Gagal mengupdate status: ${it.message}", Toast.LENGTH_SHORT).show()
-                barcodeView.resume()
-                barcodeView.decodeContinuous(callback)
+
+            override fun onCancelled(error: DatabaseError) {
+                Toast.makeText(this@CollectorMainActivity, "Error Database: ${error.message}", Toast.LENGTH_SHORT).show()
+                resumeScanner()
             }
+        })
+    }
+
+    private fun onSuccessUpdate(orderId: String) {
+        // Efek Suara
+        toneGenerator.startTone(ToneGenerator.TONE_CDMA_PIP, 150)
+
+        // Efek Visual
+        showSuccessOverlay()
+        Toast.makeText(this, "✅ Order Selesai!", Toast.LENGTH_SHORT).show()
+
+        // Delay sedikit sebelum scan lagi
+        resumeScanner(2000)
+    }
+
+    private fun resumeScanner(delay: Long = 0) {
+        barcodeView.postDelayed({
+            barcodeView.resume()
+            barcodeView.decodeContinuous(callback)
+        }, delay)
     }
 
     private fun showSuccessOverlay() {
@@ -124,12 +167,17 @@ class CollectorMainActivity : AppCompatActivity() {
         val navScan = findViewById<ImageView>(R.id.navScan)
         val navEditPrices = findViewById<ImageView>(R.id.navEditPrices)
 
+        navScan.alpha = 1.0f // Aktif
+        navEditPrices.alpha = 0.5f // Tidak aktif
+
         navScan.setOnClickListener {
-            // Sudah di sini
+            // Sudah di halaman ini
         }
 
         navEditPrices.setOnClickListener {
             val intent = Intent(this, CollectorPriceListActivity::class.java)
+            // Agar transisi mulus
+            intent.flags = Intent.FLAG_ACTIVITY_NO_ANIMATION
             startActivity(intent)
         }
     }

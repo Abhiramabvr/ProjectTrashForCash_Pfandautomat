@@ -8,14 +8,15 @@ import android.view.ViewGroup
 import android.widget.SeekBar
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
-// Hapus import AppCompatActivity, karena kita sudah punya BaseActivity di package yang sama
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.bvr.projectjtcm.R
 import com.bvr.projectjtcm.data.WastePrice
-import com.bvr.projectjtcm.data.WasteData // Pastikan import data model aman
+import com.bvr.projectjtcm.data.WasteData
 import com.bvr.projectjtcm.databinding.ActivityMainBinding
+import com.bvr.projectjtcm.ui.auth.LoginActivity
 import com.google.android.material.button.MaterialButton
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
@@ -25,11 +26,14 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-// PERUBAHAN 1: Mewarisi BaseActivity
 class MainActivity : BaseActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var categoryButtons: List<MaterialButton>
+
+    // Auth & Database
+    private lateinit var auth: FirebaseAuth
+
     private var currentWeight = 1
     private var currentIncome = 3500.0
     private var selectedType = "Plastic"
@@ -43,7 +47,8 @@ class MainActivity : BaseActivity() {
         "Other" to 1000.0
     )
 
-    private val database by lazy {
+    // Referensi Harga (Global)
+    private val pricesDatabase by lazy {
         try {
             FirebaseDatabase.getInstance().getReference("waste_prices")
         } catch (e: Exception) {
@@ -58,6 +63,18 @@ class MainActivity : BaseActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // 1. Init Auth & Cek Login
+        auth = FirebaseAuth.getInstance()
+        val currentUser = auth.currentUser
+        if (currentUser == null) {
+            startActivity(Intent(this, LoginActivity::class.java))
+            finish()
+            return
+        }
+
+        // 2. Ambil Nama User untuk Dashboard (Opsional, biar keren)
+        fetchUserName(currentUser.uid)
+
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             val cardParams = binding.cardInfo.layoutParams as ViewGroup.MarginLayoutParams
@@ -69,15 +86,15 @@ class MainActivity : BaseActivity() {
 
         setupCategoryButtons()
         setupSeekBar()
-
-        // PERUBAHAN 2: Panggil fungsi dari BaseActivity (Hanya 1 Baris!)
         setupBottomNavigation(R.id.navHome)
 
         fetchPricesFromFirebase()
 
+        // Set state awal
         updateButtonStates(binding.btnPlastic)
         updateWeightAndIncome(binding.seekBar.progress)
 
+        // LOGIC TOMBOL NEXT (ORDER)
         binding.btnNext.setOnClickListener {
             val intent = Intent(this, OrderPickupActivity::class.java)
             intent.putExtra("TYPE", selectedType)
@@ -86,15 +103,31 @@ class MainActivity : BaseActivity() {
             startActivity(intent)
         }
 
+        // LOGIC TOMBOL SAVE FOR LATER
         binding.btnSaveLater.setOnClickListener {
             saveToFirebase("Saved")
         }
     }
 
-    private fun fetchPricesFromFirebase() {
-        if (database == null) return
+    // --- FITUR BARU: Ambil Nama User ---
+    private fun fetchUserName(userId: String) {
+        val userRef = FirebaseDatabase.getInstance().getReference("users").child(userId)
+        userRef.child("name").addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val name = snapshot.value.toString()
+                if (name != "null") {
+                    // Update Text di Layout (Pastikan ID tvUserName ada, atau ganti ke tvTitle sesuai XML kamu)
+                    binding.tvUserName.text = "Hi, $name!"
+                }
+            }
+            override fun onCancelled(error: DatabaseError) {}
+        })
+    }
 
-        database?.addValueEventListener(object : ValueEventListener {
+    private fun fetchPricesFromFirebase() {
+        if (pricesDatabase == null) return
+
+        pricesDatabase?.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 if (snapshot.exists()) {
                     for (dataSnapshot in snapshot.children) {
@@ -103,20 +136,26 @@ class MainActivity : BaseActivity() {
                             categoryPrices[priceData.category] = priceData.pricePerKg
                         }
                     }
+                    // Refresh hitungan setelah harga baru masuk
                     updateWeightAndIncome(binding.seekBar.progress)
                 }
             }
-
             override fun onCancelled(error: DatabaseError) {}
         })
     }
 
-    // PERUBAHAN 3: Fungsi setupDynamicBottomNavigation() SUDAH DIHAPUS.
-    // Kode jadi jauh lebih bersih.
-
+    // --- PERBAIKAN VITAL DI SINI ---
     private fun saveToFirebase(status: String) {
         try {
-            val database = FirebaseDatabase.getInstance().getReference("waste_history")
+            val user = auth.currentUser
+            if (user == null) {
+                Toast.makeText(this, "Session Expired", Toast.LENGTH_SHORT).show()
+                return
+            }
+
+            // ARAHKAN KE: waste_history -> USER_ID (Bukan Global)
+            val database = FirebaseDatabase.getInstance().getReference("waste_history").child(user.uid)
+
             val id = database.push().key
             val date = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date())
             val month = SimpleDateFormat("MMMM", Locale.getDefault()).format(Date())
@@ -126,23 +165,27 @@ class MainActivity : BaseActivity() {
                 selectedType,
                 currentWeight,
                 currentIncome,
-                status,
+                status, // Status akan jadi "Saved"
                 date,
                 month,
-                location = "Saved Item"
+                location = "Saved Item" // Penanda item belum di-order
             )
 
             if (id != null) {
+                // Simpan ke dalam folder User
                 database.child(id).setValue(wasteData).addOnCompleteListener {
                     if (it.isSuccessful) {
-                        Toast.makeText(this, "Data Saved Successfully!", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this, "✅ Item berhasil disimpan!", Toast.LENGTH_SHORT).show()
+                        // Opsional: Reset form atau pindah ke History
+                        val intent = Intent(this, HistoryActivity::class.java)
+                        startActivity(intent)
                     } else {
-                        Toast.makeText(this, "Failed to save data", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this, "Gagal menyimpan: ${it.exception?.message}", Toast.LENGTH_SHORT).show()
                     }
                 }
             }
         } catch (e: Exception) {
-            Toast.makeText(this, "Firebase Error: ${e.message}", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -202,7 +245,8 @@ class MainActivity : BaseActivity() {
 
         binding.tvWeight.text = "$currentWeight kg"
 
-        val format = NumberFormat.getCurrencyInstance(Locale("id", "ID"))
+        // Format Rupiah Indonesia
+        val format = NumberFormat.getCurrencyInstance(Locale("in", "ID"))
         format.maximumFractionDigits = 0
         val formattedIncome = format.format(currentIncome)
 

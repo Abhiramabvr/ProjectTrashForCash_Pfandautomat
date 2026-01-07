@@ -20,6 +20,14 @@ class PriceAdapter(private val priceList: ArrayList<WastePrice>) : RecyclerView.
         this.listener = listener
     }
 
+    // --- FITUR BARU: Update Data Dinamis ---
+    // Fungsi ini dipanggil saat data dari Firebase selesai didownload
+    fun updateData(newList: List<WastePrice>) {
+        priceList.clear()
+        priceList.addAll(newList)
+        notifyDataSetChanged() // Memberitahu RecyclerView untuk refresh tampilan
+    }
+
     inner class PriceViewHolder(val binding: ItemWastePriceBinding) : RecyclerView.ViewHolder(binding.root) {
         init {
             binding.root.setOnClickListener {
@@ -41,9 +49,13 @@ class PriceAdapter(private val priceList: ArrayList<WastePrice>) : RecyclerView.
 
         holder.binding.tvCategory.text = currentItem.category
 
-        val format = NumberFormat.getCurrencyInstance(Locale("id", "ID"))
+        // Format Mata Uang Rupiah (Indonesia)
+        val format = NumberFormat.getCurrencyInstance(Locale("in", "ID"))
         format.maximumFractionDigits = 0
-        holder.binding.tvPrice.text = "+ ${format.format(currentItem.pricePerKg)}"
+        val formattedPrice = format.format(currentItem.pricePerKg)
+
+        // Tampilan: "+ Rp5.000 /kg"
+        holder.binding.tvPrice.text = "+ $formattedPrice /kg"
     }
 
     override fun getItemCount(): Int {

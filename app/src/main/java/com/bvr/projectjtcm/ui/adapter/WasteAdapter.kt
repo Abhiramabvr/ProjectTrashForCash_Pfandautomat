@@ -1,6 +1,5 @@
 package com.bvr.projectjtcm.ui.adapter
 
-import android.R
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -20,6 +19,14 @@ class WasteAdapter(private val wasteList: ArrayList<WasteData>) : RecyclerView.A
 
     fun setOnItemClickListener(listener: OnItemClickListener) {
         this.listener = listener
+    }
+
+    // --- FITUR BARU: Update Data Realtime ---
+    // Fungsi ini wajib ada agar Activity bisa mengirim data baru dari Firebase
+    fun updateData(newList: List<WasteData>) {
+        wasteList.clear()
+        wasteList.addAll(newList)
+        notifyDataSetChanged()
     }
 
     inner class WasteViewHolder(val binding: ItemWasteHistoryBinding) : RecyclerView.ViewHolder(binding.root) {
@@ -46,23 +53,26 @@ class WasteAdapter(private val wasteList: ArrayList<WasteData>) : RecyclerView.A
         holder.binding.tvWasteType.text = currentItem.type
         holder.binding.tvWeight.text = "${currentItem.weight} kg"
 
+        // Format Rupiah
         val format = NumberFormat.getCurrencyInstance(Locale("in", "ID"))
         format.maximumFractionDigits = 0
         holder.binding.tvIncome.text = format.format(currentItem.income)
 
         // Atur visibilitas dan data untuk detail jadwal
         if (currentItem.status == "Ordered" && currentItem.location != "Saved Item") {
-            // Jika sudah diorder dan BUKAN item yang hanya di-save
+            // Jika sudah diorder
             holder.binding.layoutScheduleDetails.visibility = View.VISIBLE
             holder.binding.tvLocation.text = "📍 ${currentItem.location}"
             holder.binding.tvScheduleTime.text = "🗓️ ${currentItem.pickupDate}, ${currentItem.pickupTime}"
-            holder.binding.root.alpha = 1.0f // Tampil terang
-            holder.binding.ivStatusIcon.setImageResource(R.drawable.ic_menu_send) // Ikon check/terkirim
+            holder.binding.root.alpha = 1.0f
+
+            // Menggunakan ikon sistem android secara eksplisit agar aman
+            holder.binding.ivStatusIcon.setImageResource(android.R.drawable.ic_menu_send)
         } else {
             // Jika hanya "Saved Item"
             holder.binding.layoutScheduleDetails.visibility = View.GONE
-            holder.binding.root.alpha = 1.0f // Tetap terang agar bisa diklik
-            holder.binding.ivStatusIcon.setImageResource(R.drawable.ic_menu_save) // Ikon simpan
+            holder.binding.root.alpha = 1.0f
+            holder.binding.ivStatusIcon.setImageResource(android.R.drawable.ic_menu_save)
         }
     }
 

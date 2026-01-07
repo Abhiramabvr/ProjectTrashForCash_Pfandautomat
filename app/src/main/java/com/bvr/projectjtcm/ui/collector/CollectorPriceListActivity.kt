@@ -1,5 +1,6 @@
 package com.bvr.projectjtcm.ui.collector
 
+import android.content.Intent
 import android.os.Bundle
 import android.text.InputType
 import android.widget.EditText
@@ -21,10 +22,13 @@ class CollectorPriceListActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityCollectorPriceListBinding
     private lateinit var adapter: PriceAdapter
+
+    // Kita gunakan list kosong awal, nanti diisi oleh Firebase
     private val priceList = ArrayList<WastePrice>()
 
     private val database by lazy {
         try {
+            // Path ini AMAN (Global), tidak perlu User ID
             FirebaseDatabase.getInstance().getReference("waste_prices")
         } catch (e: Exception) {
             null
@@ -56,15 +60,20 @@ class CollectorPriceListActivity : AppCompatActivity() {
     private fun showEditPriceDialog(wastePrice: WastePrice) {
         val editText = EditText(this).apply {
             inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
+            // Tampilkan harga saat ini agar mudah diedit
             setText(wastePrice.pricePerKg.toString())
+            hint = "Masukkan harga baru per kg"
         }
 
         AlertDialog.Builder(this)
-            .setTitle("Edit Harga untuk ${wastePrice.category}")
+            .setTitle("Edit Harga: ${wastePrice.category}")
+            .setMessage("Ubah harga per kilogram:")
             .setView(editText)
             .setPositiveButton("Simpan") { _, _ ->
-                val newPrice = editText.text.toString().toDoubleOrNull()
-                if (newPrice != null) {
+                val input = editText.text.toString()
+                val newPrice = input.toDoubleOrNull()
+
+                if (newPrice != null && newPrice >= 0) {
                     updatePriceInFirebase(wastePrice.category, newPrice)
                 } else {
                     Toast.makeText(this, "Harga tidak valid", Toast.LENGTH_SHORT).show()
@@ -75,12 +84,13 @@ class CollectorPriceListActivity : AppCompatActivity() {
     }
 
     private fun updatePriceInFirebase(category: String, newPrice: Double) {
+        // Asumsi: Key database sama dengan nama kategori
         database?.child(category)?.child("pricePerKg")?.setValue(newPrice)
             ?.addOnSuccessListener {
                 Toast.makeText(this, "Harga $category berhasil diupdate", Toast.LENGTH_SHORT).show()
             }
             ?.addOnFailureListener {
-                Toast.makeText(this, "Gagal mengupdate harga", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Gagal mengupdate harga: ${it.message}", Toast.LENGTH_SHORT).show()
             }
     }
 
@@ -89,16 +99,20 @@ class CollectorPriceListActivity : AppCompatActivity() {
 
         database?.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                priceList.clear()
+                val tempList = ArrayList<WastePrice>()
+
                 if (snapshot.exists()) {
                     for (dataSnapshot in snapshot.children) {
                         val price = dataSnapshot.getValue(WastePrice::class.java)
                         if (price != null) {
-                            priceList.add(price)
+                            tempList.add(price)
                         }
                     }
                 }
-                adapter.notifyDataSetChanged()
+
+                // PENTING: Gunakan fungsi updateData yang tadi kita buat di Adapter
+                // agar animasi refresh-nya lebih mulus
+                adapter.updateData(tempList)
             }
 
             override fun onCancelled(error: DatabaseError) {
@@ -111,12 +125,19 @@ class CollectorPriceListActivity : AppCompatActivity() {
         val navScan = binding.bottomNavContainer.findViewById<ImageView>(R.id.navScan)
         val navEditPrices = binding.bottomNavContainer.findViewById<ImageView>(R.id.navEditPrices)
 
+        // Efek Visual: Ikon Scan redup, Ikon Harga terang (karena sedang aktif)
+        navScan.alpha = 0.5f
+        navEditPrices.alpha = 1.0f
+
         navScan.setOnClickListener {
-            finish() // Kembali ke halaman scanner
+            // Kembali ke halaman Scanner
+            finish()
+            // Opsional: hilangkan animasi agar transisi terasa instan seperti tab bar asli
+            overridePendingTransition(0, 0)
         }
 
         navEditPrices.setOnClickListener {
-            // Already here
+            // Sedang di halaman ini, tidak perlu aksi apa-apa
         }
     }
 }

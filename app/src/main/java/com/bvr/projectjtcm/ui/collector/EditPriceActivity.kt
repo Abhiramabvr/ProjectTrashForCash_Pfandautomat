@@ -25,6 +25,7 @@ class EditPriceActivity : AppCompatActivity() {
 
     private val database by lazy {
         try {
+            // Path Database Global (Aman)
             FirebaseDatabase.getInstance().getReference("waste_prices")
         } catch (e: Exception) {
             null
@@ -36,7 +37,8 @@ class EditPriceActivity : AppCompatActivity() {
         binding = ActivityPriceListBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        binding.tvTitle.text = "Edit Harga Sampah"
+        // Ubah Judul agar terlihat beda dengan versi User
+        binding.tvTitle.text = "Edit Harga Sampah (Kolektor)"
 
         setupRecyclerView()
         fetchPricesFromFirebase()
@@ -48,7 +50,7 @@ class EditPriceActivity : AppCompatActivity() {
         adapter = PriceAdapter(priceList)
         binding.rvPriceList.adapter = adapter
 
-        // Tambahkan listener untuk edit harga
+        // Listener Klik untuk Edit
         adapter.setOnItemClickListener(object : PriceAdapter.OnItemClickListener {
             override fun onItemClick(wastePrice: WastePrice) {
                 showEditPriceDialog(wastePrice)
@@ -60,17 +62,21 @@ class EditPriceActivity : AppCompatActivity() {
         val editText = EditText(this).apply {
             inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
             setText(wastePrice.pricePerKg.toString())
+            hint = "Masukkan harga baru"
         }
 
         AlertDialog.Builder(this)
-            .setTitle("Edit Harga untuk ${wastePrice.category}")
+            .setTitle("Edit: ${wastePrice.category}")
+            .setMessage("Masukkan harga per kg:")
             .setView(editText)
             .setPositiveButton("Simpan") { _, _ ->
                 val newPrice = editText.text.toString().toDoubleOrNull()
-                if (newPrice != null) {
+
+                // Validasi: Harga tidak boleh kosong dan tidak boleh minus
+                if (newPrice != null && newPrice >= 0) {
                     updatePriceInFirebase(wastePrice.category, newPrice)
                 } else {
-                    Toast.makeText(this, "Harga tidak valid", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Harga tidak valid!", Toast.LENGTH_SHORT).show()
                 }
             }
             .setNegativeButton("Batal", null)
@@ -80,10 +86,10 @@ class EditPriceActivity : AppCompatActivity() {
     private fun updatePriceInFirebase(category: String, newPrice: Double) {
         database?.child(category)?.child("pricePerKg")?.setValue(newPrice)
             ?.addOnSuccessListener {
-                Toast.makeText(this, "Harga $category berhasil diupdate", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "✅ Harga $category diperbarui", Toast.LENGTH_SHORT).show()
             }
             ?.addOnFailureListener {
-                Toast.makeText(this, "Gagal mengupdate harga", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "❌ Gagal update: ${it.message}", Toast.LENGTH_SHORT).show()
             }
     }
 
@@ -92,16 +98,18 @@ class EditPriceActivity : AppCompatActivity() {
 
         database?.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                priceList.clear()
+                val tempList = ArrayList<WastePrice>()
+
                 if (snapshot.exists()) {
                     for (dataSnapshot in snapshot.children) {
                         val price = dataSnapshot.getValue(WastePrice::class.java)
                         if (price != null) {
-                            priceList.add(price)
+                            tempList.add(price)
                         }
                     }
                 }
-                adapter.notifyDataSetChanged()
+                // Pakai updateData agar refresh lebih mulus
+                adapter.updateData(tempList)
             }
 
             override fun onCancelled(error: DatabaseError) {
@@ -111,20 +119,26 @@ class EditPriceActivity : AppCompatActivity() {
     }
 
     private fun setupBottomNavigation() {
-        // Kita gunakan binding di sini karena layoutnya sama dengan PriceListActivity
-        val navScan = binding.bottomNavContainer.findViewById<ImageView>(R.id.navHome) // Di layout ini, navHome adalah ikon pertama
-        val navEditPrices = binding.bottomNavContainer.findViewById<ImageView>(R.id.navHistory) // dan navHistory adalah ikon kedua
+        // PERHATIAN: Karena kamu memakai layout 'ActivityPriceListBinding' (punya User),
+        // ID tombolnya adalah navHome, navHistory, dll.
+        // Di sini kita "mengakali" agar navHome jadi tombol kembali (ke Scanner).
 
-        // Sesuaikan alpha
-        navScan.alpha = 0.5f
-        navEditPrices.alpha = 1.0f
+        val btnBackToScan = binding.bottomNavContainer.findViewById<ImageView>(R.id.navHome) // Ikon pertama
+        val btnCurrentPage = binding.bottomNavContainer.findViewById<ImageView>(R.id.navHistory) // Ikon kedua
 
-        navScan.setOnClickListener {
-            finish() // Kembali ke halaman scanner
+        // Efek Visual: Tombol aktif terang, tombol lain redup
+        btnBackToScan.alpha = 0.5f
+        btnCurrentPage.alpha = 1.0f
+
+        // Tombol Home (User) -> Berfungsi sebagai Back ke Scanner (Kolektor)
+        btnBackToScan.setOnClickListener {
+            finish()
         }
 
-        navEditPrices.setOnClickListener {
-            // Sudah di sini
+        // Tombol History (User) -> Berfungsi sebagai halaman Edit Harga saat ini
+        btnCurrentPage.setOnClickListener {
+            // Tidak melakukan apa-apa karena sudah di halaman ini
+            Toast.makeText(this, "Anda sedang di mode Edit Harga", Toast.LENGTH_SHORT).show()
         }
     }
 }
