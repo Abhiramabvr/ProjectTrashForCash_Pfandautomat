@@ -6,7 +6,6 @@
     android:layout_height="match_parent"
     android:background="#F8FAF8">
 
-    <!-- Header Background -->
     <View
         android:id="@+id/headerBg"
         android:layout_width="match_parent"
@@ -14,7 +13,6 @@
         android:background="@drawable/header_background_curved"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- Title Bar -->
     <ImageView
         android:id="@+id/btnBack"
         android:layout_width="24dp"
@@ -47,7 +45,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/btnBack"/>
 
-    <!-- Profile Image -->
     <androidx.cardview.widget.CardView
         android:id="@+id/cvProfileImage"
         android:layout_width="100dp"
@@ -58,7 +55,7 @@
         app:layout_constraintTop_toBottomOf="@id/btnBack"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
-        
+
         <ImageView
             android:id="@+id/ivProfileImage"
             android:layout_width="match_parent"
@@ -68,12 +65,11 @@
             android:background="#E1EEBC"/>
     </androidx.cardview.widget.CardView>
 
-    <!-- Name, Job, and Stats -->
     <TextView
         android:id="@+id/tvName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="James Martin"
+        android:text="Loading..."
         android:textColor="#FFFFFF"
         android:textSize="22sp"
         android:textStyle="bold"
@@ -86,7 +82,7 @@
         android:id="@+id/tvRole"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Waste Management User"
+        android:text="User"
         android:textColor="#E1EEBC"
         android:textSize="14sp"
         android:layout_marginTop="4dp"
@@ -94,7 +90,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
 
-    <!-- Recycled Stats -->
     <LinearLayout
         android:id="@+id/layoutStats"
         android:layout_width="wrap_content"
@@ -121,7 +116,6 @@
             android:textSize="12sp"/>
     </LinearLayout>
 
-    <!-- Content Scroll -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -135,7 +129,6 @@
             android:orientation="vertical"
             android:padding="24dp">
 
-            <!-- Email Item -->
             <LinearLayout
                 android:id="@+id/itemEmail"
                 android:layout_width="match_parent"
@@ -166,16 +159,15 @@
                         android:id="@+id/tvEmailValue"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="james012@gmail.com"
+                        android:text="-"
                         android:textColor="#1B211A"
                         android:textSize="16sp"/>
                 </LinearLayout>
                 <ImageView android:layout_width="16dp" android:layout_height="16dp" android:src="@android:drawable/ic_menu_edit" app:tint="#328E6E"/>
             </LinearLayout>
-            
+
             <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#F0F0F0"/>
 
-            <!-- Phone Item -->
             <LinearLayout
                 android:id="@+id/itemPhone"
                 android:layout_width="match_parent"
@@ -206,7 +198,7 @@
                         android:id="@+id/tvPhoneValue"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="1234567891"
+                        android:text="-"
                         android:textColor="#1B211A"
                         android:textSize="16sp"/>
                 </LinearLayout>
@@ -215,7 +207,6 @@
 
             <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#F0F0F0"/>
 
-            <!-- Instagram Item -->
             <LinearLayout
                 android:id="@+id/itemInstagram"
                 android:layout_width="match_parent"
@@ -246,17 +237,32 @@
                         android:id="@+id/tvInstagramValue"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text=""
+                        android:text="-"
                         android:textColor="#1B211A"
                         android:textSize="16sp"/>
                 </LinearLayout>
                 <ImageView android:layout_width="16dp" android:layout_height="16dp" android:src="@android:drawable/ic_menu_edit" app:tint="#328E6E"/>
             </LinearLayout>
 
+            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#F0F0F0"/>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnLogout"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginTop="40dp"
+                android:layout_marginBottom="20dp"
+                android:text="LOGOUT"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="#FF5252"
+                app:cornerRadius="12dp"
+                app:elevation="4dp"/>
+
         </LinearLayout>
     </ScrollView>
 
-    <!-- Bottom Navigation Bar -->
     <LinearLayout
         android:id="@+id/bottomNavContainer"
         android:layout_width="match_parent"

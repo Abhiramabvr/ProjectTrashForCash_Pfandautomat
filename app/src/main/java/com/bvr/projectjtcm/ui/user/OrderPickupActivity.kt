@@ -13,6 +13,7 @@ import androidx.core.view.WindowInsetsCompat
 import com.bvr.projectjtcm.ui.user.QrDisplayActivity
 import com.bvr.projectjtcm.data.WasteData
 import com.bvr.projectjtcm.databinding.ActivityOrderPickupBinding
+import com.google.firebase.auth.FirebaseAuth // TAMBAHAN IMPORT
 import com.google.firebase.database.FirebaseDatabase
 import org.maplibre.android.MapLibre
 import org.maplibre.android.annotations.MarkerOptions
@@ -129,9 +130,20 @@ class OrderPickupActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
+    // --- PERBAIKAN UTAMA ADA DI SINI ---
     private fun saveToFirebase(status: String) {
-         try {
-            val database = FirebaseDatabase.getInstance().getReference("waste_history")
+        try {
+            // 1. Ambil ID User yang sedang login
+            val currentUser = FirebaseAuth.getInstance().currentUser
+            if (currentUser == null) {
+                Toast.makeText(this, "Sesi habis, silakan login ulang", Toast.LENGTH_SHORT).show()
+                return
+            }
+            val userId = currentUser.uid
+
+            // 2. Arahkan database ke folder SPESIFIK user tersebut
+            // Path: waste_history -> USER_ID
+            val database = FirebaseDatabase.getInstance().getReference("waste_history").child(userId)
 
             val id = existingId ?: database.push().key
             val date = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date())
@@ -151,6 +163,7 @@ class OrderPickupActivity : AppCompatActivity(), OnMapReadyCallback {
             )
 
             if (id != null) {
+                // Simpan data di dalam folder user
                 database.child(id).setValue(wasteData).addOnCompleteListener { task ->
                     if (task.isSuccessful) {
                         // Buka Halaman QR setelah berhasil menyimpan
@@ -173,11 +186,10 @@ class OrderPickupActivity : AppCompatActivity(), OnMapReadyCallback {
         val styleUrl = "https://api.maptiler.com/maps/streets-v2/style.json?key=DhaZkQmsFvw7N7WHe394"
 
         map.setStyle(styleUrl) { style ->
-            // Pindahkan fokus kamera ke Yogyakarta
             val yogyakarta = LatLng(-7.7925, 110.3660)
             map.cameraPosition = CameraPosition.Builder()
                 .target(yogyakarta)
-                .zoom(12.0) // Zoom yang sesuai untuk melihat beberapa lokasi
+                .zoom(12.0)
                 .build()
 
             addWasteBankMarkers()
