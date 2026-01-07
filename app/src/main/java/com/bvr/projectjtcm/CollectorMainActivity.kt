@@ -3,8 +3,6 @@ package com.bvr.projectjtcm
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.media.ToneGenerator
-import android.media.AudioManager
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.View
@@ -15,6 +13,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.bvr.projectjtcm.databinding.ActivityCollectorMainBinding
 import com.google.firebase.database.FirebaseDatabase
+import com.google.zxing.client.android.BeepManager
 import com.journeyapps.barcodescanner.BarcodeCallback
 import com.journeyapps.barcodescanner.BarcodeResult
 import com.journeyapps.barcodescanner.DecoratedBarcodeView
@@ -23,7 +22,7 @@ class CollectorMainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityCollectorMainBinding
     private lateinit var barcodeView: DecoratedBarcodeView
-    private lateinit var toneGenerator: ToneGenerator
+    private lateinit var beepManager: BeepManager
     private val CAMERA_PERMISSION_REQUEST_CODE = 101
     
     private val callback = object : BarcodeCallback {
@@ -46,8 +45,9 @@ class CollectorMainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         barcodeView = binding.barcodeScanner
-        // Inisialisasi ToneGenerator
-        toneGenerator = ToneGenerator(AudioManager.STREAM_MUSIC, 100)
+        
+        // Inisialisasi BeepManager
+        beepManager = BeepManager(this)
         
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), CAMERA_PERMISSION_REQUEST_CODE)
@@ -66,12 +66,6 @@ class CollectorMainActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         barcodeView.pause()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        // Lepaskan resource saat activity dihancurkan
-        toneGenerator.release()
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
@@ -94,12 +88,12 @@ class CollectorMainActivity : AppCompatActivity() {
         val database = FirebaseDatabase.getInstance().getReference("waste_history").child(orderId)
         database.child("status").setValue("Completed")
             .addOnSuccessListener {
-                // Mainkan suara BEEP
-                toneGenerator.startTone(ToneGenerator.TONE_CDMA_PIP, 150)
+                // Mainkan suara BEEP dan Vibrate menggunakan BeepManager
+                beepManager.playBeepSoundAndVibrate()
                 
                 showSuccessOverlay()
                 Toast.makeText(this, "✅ Order #$orderId Selesai!", Toast.LENGTH_SHORT).show()
-                barcodeView.postDelayed({
+                barcodeView.postDelayed({ 
                     barcodeView.resume()
                     barcodeView.decodeContinuous(callback)
                 }, 2000)
