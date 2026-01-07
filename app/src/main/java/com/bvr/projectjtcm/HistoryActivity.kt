@@ -59,22 +59,29 @@ class HistoryActivity : AppCompatActivity() {
         binding.rvWasteHistory.layoutManager = LinearLayoutManager(this)
         adapter = WasteAdapter(wasteList)
         
-        // IMPLEMENTASI KLIK PADA ITEM HISTORY
         adapter.setOnItemClickListener(object : WasteAdapter.OnItemClickListener {
             override fun onItemClick(wasteData: WasteData) {
-                if (wasteData.status == "Ordered") {
-                    // Jika sudah diorder, buka halaman QR Code
-                    val intent = Intent(this@HistoryActivity, QrDisplayActivity::class.java)
-                    intent.putExtra("ORDER_ID", wasteData.id)
-                    startActivity(intent)
-                } else {
-                    // Jika masih "Saved", buka halaman Order untuk dilanjutkan
-                    val intent = Intent(this@HistoryActivity, OrderPickupActivity::class.java)
-                    intent.putExtra("EXISTING_ID", wasteData.id)
-                    intent.putExtra("TYPE", wasteData.type)
-                    intent.putExtra("WEIGHT", wasteData.weight)
-                    intent.putExtra("INCOME", wasteData.income)
-                    startActivity(intent)
+                // Logika Klik Berdasarkan Status
+                when (wasteData.status) {
+                    "Ordered" -> {
+                        // Jika sudah diorder tapi belum selesai, tampilkan QR Code
+                        val intent = Intent(this@HistoryActivity, QrDisplayActivity::class.java)
+                        intent.putExtra("ORDER_ID", wasteData.id)
+                        startActivity(intent)
+                    }
+                    "Saved" -> {
+                        // Jika masih disimpan, lanjutkan order
+                        val intent = Intent(this@HistoryActivity, OrderPickupActivity::class.java)
+                        intent.putExtra("EXISTING_ID", wasteData.id)
+                        intent.putExtra("TYPE", wasteData.type)
+                        intent.putExtra("WEIGHT", wasteData.weight)
+                        intent.putExtra("INCOME", wasteData.income)
+                        startActivity(intent)
+                    }
+                    "Completed" -> {
+                        // Jika sudah selesai, disable klik (hanya tampilkan pesan)
+                        Toast.makeText(this@HistoryActivity, "✅ Transaksi ini sudah selesai & dicairkan.", Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
         })
@@ -98,8 +105,12 @@ class HistoryActivity : AppCompatActivity() {
                     val waste = dataSnapshot.getValue(WasteData::class.java)
                     if (waste != null) {
                         wasteList.add(0, waste)
-                        totalWeight += waste.weight
-                        totalIncome += waste.income
+                        
+                        // Hitung total hanya jika statusnya "Completed"
+                        if (waste.status == "Completed") {
+                            totalWeight += waste.weight
+                            totalIncome += waste.income
+                        }
                     }
                 }
                 adapter.notifyDataSetChanged()
@@ -115,10 +126,11 @@ class HistoryActivity : AppCompatActivity() {
     private fun updateSummary(weight: Int, income: Double) {
         binding.tvTotalWeight.text = "$weight kg"
         
-        val format = NumberFormat.getCurrencyInstance(Locale("in", "ID"))
+        val format = NumberFormat.getCurrencyInstance(Locale("id", "ID"))
         format.maximumFractionDigits = 0
         binding.tvTotalIncome.text = format.format(income)
 
+        // Progress bar logika sederhana (misal target 100kg)
         val progress = if (weight > 100) 100 else weight
         binding.progressBar.progress = progress
     }
